@@ -35,6 +35,11 @@ var Box = (function () {
             this.spriteRed.alpha = 1;
             this.spriteBlue.alpha = 0;
         }
+        if (index == 1) {
+            this.flag = ActorFlag.blue;
+            this.spriteRed.alpha = 0;
+            this.spriteBlue.alpha = 1;
+        }
     };
     return Box;
 })();
@@ -42,8 +47,7 @@ var GridBoxes = (function () {
     function GridBoxes(size, gameState) {
         this.gameState = gameState;
         this.initTiles = new Phaser.Point(128, 256);
-        this.initPlayers = new Array();
-        this.initPlayers.push(new Phaser.Point(163, 258));
+        this.initPlayers = new Phaser.Point(163, 258);
         this.boxes = [];
         for (var i = 0; i < size.x; ++i) {
             this.boxes.push(new Array());
@@ -53,8 +57,8 @@ var GridBoxes = (function () {
         }
     }
     GridBoxes.prototype.getNext = function (playerPos, dir, index) {
-        var r = Math.ceil((playerPos.y - this.initPlayers[index].y) / 52);
-        var c = Math.ceil((playerPos.x - this.initPlayers[index].x) / 64);
+        var r = Math.ceil((playerPos.y - this.initPlayers.y) / 52);
+        var c = Math.ceil((playerPos.x - this.initPlayers.x) / 64);
         this.boxes[c][r].changeActor(index);
         r += dir.y;
         c += dir.x;
@@ -66,8 +70,10 @@ var GridBoxes = (function () {
             c = this.boxes.length - 1;
         if (r >= this.boxes[c].length)
             r = this.boxes[c].length - 1;
-        console.log("r:" + r + ", c:" + c);
         return this.boxes[c][r].pos;
+    };
+    GridBoxes.prototype.getCoords = function (x, y) {
+        return this.boxes[x][y].pos;
     };
     return GridBoxes;
 })();
@@ -96,7 +102,6 @@ var GameActor = (function () {
         this.fireType = 0;
         this.walkDir = new Phaser.Point(0, 0);
         this.newDir = new Phaser.Point(0, 0);
-        this.state = ActorState.idle;
         this.gameState.physics.arcade.enable(this.sprite);
         this.sprite.anchor.set(0.5);
     }
@@ -105,6 +110,7 @@ var GameActor = (function () {
     };
     GameActor.prototype.setState = function (state) {
         this.state = state;
+        this.playFrames();
     };
     GameActor.prototype.playFrames = function () {
         var facing = 'Def';
@@ -150,56 +156,66 @@ var GameActor = (function () {
 })();
 var Player = (function (_super) {
     __extends(Player, _super);
-    function Player(sprite, gameState) {
+    function Player(sprite, index, gameState) {
         _super.call(this, sprite, gameState);
         this.gameState.physics.arcade.enable(this.sprite);
+        this.index = index;
         this.sprite.animations.add('idleDef', [0, 1, 2, 3], 5, true);
         this.sprite.animations.add('walkRight', [10, 11, 12, 13, 14, 15, 16, 17, 18, 19], 10, true);
         this.sprite.animations.add('walkLeft', [20, 21, 22, 23, 24, 25, 26, 27, 28, 29], 10, true);
         this.sprite.animations.add('walkDown', [30, 31, 32, 33, 34, 35, 36, 37, 38, 39], 10, true);
         this.sprite.animations.add('walkUp', [40, 41, 42, 43, 44, 45, 46, 47, 48, 49], 10, true);
-        this.keys = this.gameState.input.keyboard.addKeys({
-            'E': Phaser.Keyboard.E, 'Q': Phaser.Keyboard.Q, 'SPACEBAR': Phaser.Keyboard.SPACEBAR,
-            'W': Phaser.Keyboard.W, 'A': Phaser.Keyboard.A, 'S': Phaser.Keyboard.S, 'D': Phaser.Keyboard.D,
-            'left': Phaser.Keyboard.LEFT, 'right': Phaser.Keyboard.RIGHT, 'up': Phaser.Keyboard.UP, 'down': Phaser.Keyboard.DOWN
-        });
+        if (index == 0) {
+            this.keys = this.gameState.input.keyboard.addKeys({
+                'E': Phaser.Keyboard.E, 'Q': Phaser.Keyboard.Q, 'SPACEBAR': Phaser.Keyboard.SPACEBAR,
+                'W': Phaser.Keyboard.W, 'A': Phaser.Keyboard.A, 'S': Phaser.Keyboard.S, 'D': Phaser.Keyboard.D,
+            });
+        }
+        else {
+            this.keys = this.gameState.input.keyboard.addKeys({
+                'left': Phaser.Keyboard.LEFT, 'right': Phaser.Keyboard.RIGHT, 'up': Phaser.Keyboard.UP, 'down': Phaser.Keyboard.DOWN
+            });
+        }
         this.lastInputTime = this.gameState.game.time.time;
+        this.setState(ActorState.idle);
     }
     Player.prototype.getDirection = function () {
         // Check nuova direzione 
         var newDir = new Phaser.Point();
-        if (this.keys.W.isDown || this.keys.up.isDown) {
+        if ((this.keys.W && this.keys.W.isDown) || (this.keys.up && this.keys.up.isDown)) {
             newDir.y = -1;
         }
-        else if (this.keys.S.isDown || this.keys.down.isDown) {
+        else if ((this.keys.S && this.keys.S.isDown) || (this.keys.down && this.keys.down.isDown)) {
             newDir.y = +1;
         }
         if (newDir.y == 0)
-            if (this.keys.A.isDown || this.keys.left.isDown) {
+            if ((this.keys.A && this.keys.A.isDown) || (this.keys.left && this.keys.left.isDown)) {
                 newDir.x = -1;
             }
-            else if (this.keys.D.isDown || this.keys.right.isDown) {
+            else if ((this.keys.D && this.keys.D.isDown) || (this.keys.right && this.keys.right.isDown)) {
                 newDir.x = +1;
             }
         return newDir;
     };
     Player.prototype.update = function () {
         // Debug: Input check
-        if (this.gameState.game.time.time > this.lastInputTime + 100 && (this.keys.E.isDown || this.keys.Q.isDown)) {
-            if (this.state !== ActorState.debug) {
-                this.state = ActorState.debug;
-                this.sprite.animations.stop(null, false);
-            }
-            var p;
-            if (this.keys.E.isDown)
-                this.sprite.frame = +this.sprite.frame + 1;
-            if (this.keys.Q.isDown)
-                this.sprite.frame = +this.sprite.frame - 1;
-            this.lastInputTime = this.gameState.game.time.time;
-            // Debug: START GAME
-            if (!this.gameState.start && this.keys.SPACEBAR.isDown) {
-                this.gameState.play();
-            }
+        /*if (this.gameState.game.time.time > this.lastInputTime + 100 && (this.keys.E.isDown || this.keys.Q.isDown)) {
+
+           if (this.state !== ActorState.debug) {
+               this.setState(ActorState.debug);
+               this.sprite.animations.stop(null, false);
+           }
+
+          if (this.keys.E.isDown)
+               this.sprite.frame = +this.sprite.frame + 1;
+           if (this.keys.Q.isDown)
+               this.sprite.frame = +this.sprite.frame - 1;
+           this.lastInputTime = this.gameState.game.time.time;
+
+       }*/
+        // Debug: START GAME
+        if (!this.gameState.start && (this.keys.SPACEBAR && this.keys.SPACEBAR.isDown)) {
+            this.gameState.play();
         }
         // Controllo se il personaggio è ancora vivo
         if (this.state !== ActorState.die && this.state !== ActorState.debug) {
@@ -212,11 +228,11 @@ var Player = (function (_super) {
             if (this.state === ActorState.canChangeDir) {
                 this.setWalkDir(this.newDir);
                 this.setState(ActorState.walk);
-                var p = this.gameState.boxes.getNext(new Phaser.Point(this.sprite.x, this.sprite.y), this.walkDir, 0);
+                var p = this.gameState.boxes.getNext(new Phaser.Point(this.sprite.x, this.sprite.y), this.walkDir, this.index);
                 this.gameState.add.tween(this.sprite).to(p, 500, "Linear", true).onComplete.add(this.touchTile, this);
             }
         }
-        this.playFrames();
+        // this.playFrames();
     };
     Player.prototype.touchTile = function () {
         this.setState(ActorState.canChangeDir);
@@ -246,8 +262,8 @@ var MainState = (function (_super) {
     };
     MainState.prototype.preload = function () {
         this.load.image('background', 'assets/background.png');
-        this.load.spritesheet('player', 'assets/player_red.png', 64, 64);
-        this.load.spritesheet('player', 'assets/player_blue.png', 64, 64);
+        this.load.spritesheet('player_red', 'assets/player_red.png', 64, 64);
+        this.load.spritesheet('player_blue', 'assets/player_blue.png', 64, 64);
         this.load.spritesheet('tile_red', 'assets/tile_red.png', 64, 64);
         this.load.spritesheet('tile_blue', 'assets/tile_blue.png', 64, 64);
         this.load.spritesheet('tile_blank', 'assets/tile_blank.png', 64, 64);
@@ -255,18 +271,29 @@ var MainState = (function (_super) {
     MainState.prototype.create = function () {
         this.add.sprite(0, 0, 'background');
         this.boxes = new GridBoxes(new Phaser.Point(16, 7), this);
-        this.player = new Player(this.add.sprite(163, 258, 'player'), this);
-        this.frameText = this.add.text(20, 20, 'Player Frame: ' + this.player.sprite.frame, { fontSize: '16px', fill: '#000' });
+        this.players = [];
+        var p1 = this.boxes.getCoords(0, 3);
+        this.players.push(new Player(this.add.sprite(p1.x, p1.y, 'player_red'), 0, this));
+        var p2 = this.boxes.getCoords(15, 3);
+        this.players.push(new Player(this.add.sprite(p2.x, p2.y, 'player_blue'), 1, this));
+        // this.frameText = this.add.text(20, 20, 'Player Frame: ' + this.player.sprite.frame, { fontSize: '16px', fill: '#000' });
     };
     MainState.prototype.play = function () {
-        if (this.player.state === ActorState.idle) {
-            this.player.setNewDir(new Phaser.Point(1, 0));
-            this.player.setState(ActorState.canChangeDir);
+        this.start = true;
+        for (var i = 0; i < this.players.length; ++i) {
+            if (this.players[i].state === ActorState.idle) {
+                if (i == 0)
+                    this.players[i].setNewDir(new Phaser.Point(1, 0));
+                else
+                    this.players[i].setNewDir(new Phaser.Point(-1, 0));
+                this.players[i].setState(ActorState.canChangeDir);
+            }
         }
     };
     MainState.prototype.update = function () {
-        this.player.update();
-        this.frameText.text = 'Player Frame: ' + this.player.sprite.frame;
+        this.players[0].update();
+        this.players[1].update();
+        //this.frameText.text = 'Player Frame: ' + this.player.sprite.frame;
     };
     return MainState;
 })(Phaser.State);
