@@ -1,3 +1,88 @@
+/*
+for (y = 0; y < 10; y++) {
+    boxes.push([]);
+    for (x = 0; x < 10; x++) {
+        boxes[y].push(document.getElementById("box" + x + "_" + y));
+
+        boxes[y][x].left = document.getElementById("box" + (x - 1) + "_" + y);
+        boxes[y][x].right = document.getElementById("box" + (x + 1) + "_" + y);
+        boxes[y][x].top = document.getElementById("box" + x + "_" + (y - 1));
+        boxes[y][x].bottom = document.getElementById("box" + x + "_" + (y + 1));
+
+    }
+}
+
+var fase = "COLORE_INIZIALE";
+
+function azione(x, y) {
+    if (fase == "COLORE_INIZIALE")
+        return true;
+
+    if (fase == "CERCA_CONTORNO") {
+        // la casella su cui ci troviamo va prima colorata:
+        boxes[y][x].checked = true;
+        var i, contorno = cerca_contorno(x, y);
+        var r = [];
+        for (i = 0; i < contorno.length; i++)
+            r.push(contorno[i].id);
+        alert(r.join());
+        return false;
+    }
+
+    return false;
+}
+
+
+function cerca_contorno(orig_x, orig_y) {
+    for (y = 0; y < 10; y++)
+        for (x = 0; x < 10; x++)
+            boxes[y][x].visited = false;
+
+    var pila = [boxes[orig_y][orig_x]];
+    boxes[orig_y][orig_x].prev = null;
+
+    while (pila.length != 0) {
+        var curr = pila.pop();
+ 
+        // marca come visitato
+        curr.visited = true;
+
+        if (curr.prev != boxes[orig_y][orig_x] &&
+            (curr.left == boxes[orig_y][orig_x] ||
+                curr.right == boxes[orig_y][orig_x] ||
+                curr.top == boxes[orig_y][orig_x] ||
+                curr.bottom == boxes[orig_y][orig_x])) {
+            // ciclo trovato!
+            var ciclo = [curr];
+            while (ciclo[ciclo.length - 1].prev != null)
+                ciclo.push(ciclo[ciclo.length - 1].prev);
+            return ciclo;
+        }
+
+        if (curr.left && curr.left.checked && !curr.left.visited) {
+            curr.left.prev = curr;
+            pila.push(curr.left);
+        }
+
+        if (curr.right && curr.right.checked && !curr.right.visited) {
+            curr.right.prev = curr;
+            pila.push(curr.right);
+        }
+
+        if (curr.top && curr.top.checked && !curr.top.visited) {
+            curr.top.prev = curr;
+            pila.push(curr.top);
+        }
+
+        if (curr.bottom && curr.bottom.checked && !curr.bottom.visited) {
+            curr.bottom.prev = curr;
+            pila.push(curr.bottom);
+        }
+    }
+
+    return null;
+}
+*/
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -167,7 +252,7 @@ var Player = (function (_super) {
         this.sprite.animations.add('walkUp', [40, 41, 42, 43, 44, 45, 46, 47, 48, 49], 10, true);
         if (index == 0) {
             this.keys = this.gameState.input.keyboard.addKeys({
-                'E': Phaser.Keyboard.E, 'Q': Phaser.Keyboard.Q, 'SPACEBAR': Phaser.Keyboard.SPACEBAR,
+                'SPACEBAR': Phaser.Keyboard.SPACEBAR,
                 'W': Phaser.Keyboard.W, 'A': Phaser.Keyboard.A, 'S': Phaser.Keyboard.S, 'D': Phaser.Keyboard.D,
             });
         }
@@ -176,7 +261,6 @@ var Player = (function (_super) {
                 'left': Phaser.Keyboard.LEFT, 'right': Phaser.Keyboard.RIGHT, 'up': Phaser.Keyboard.UP, 'down': Phaser.Keyboard.DOWN
             });
         }
-        this.lastInputTime = this.gameState.game.time.time;
         this.setState(ActorState.idle);
     }
     Player.prototype.getDirection = function () {
@@ -198,21 +282,6 @@ var Player = (function (_super) {
         return newDir;
     };
     Player.prototype.update = function () {
-        // Debug: Input check
-        /*if (this.gameState.game.time.time > this.lastInputTime + 100 && (this.keys.E.isDown || this.keys.Q.isDown)) {
-
-           if (this.state !== ActorState.debug) {
-               this.setState(ActorState.debug);
-               this.sprite.animations.stop(null, false);
-           }
-
-          if (this.keys.E.isDown)
-               this.sprite.frame = +this.sprite.frame + 1;
-           if (this.keys.Q.isDown)
-               this.sprite.frame = +this.sprite.frame - 1;
-           this.lastInputTime = this.gameState.game.time.time;
-
-       }*/
         // Debug: START GAME
         if (!this.gameState.start && (this.keys.SPACEBAR && this.keys.SPACEBAR.isDown)) {
             this.gameState.play();
@@ -232,7 +301,6 @@ var Player = (function (_super) {
                 this.gameState.add.tween(this.sprite).to(p, 500, "Linear", true).onComplete.add(this.touchTile, this);
             }
         }
-        // this.playFrames();
     };
     Player.prototype.touchTile = function () {
         this.setState(ActorState.canChangeDir);
@@ -276,7 +344,6 @@ var MainState = (function (_super) {
         this.players.push(new Player(this.add.sprite(p1.x, p1.y, 'player_red'), 0, this));
         var p2 = this.boxes.getCoords(15, 3);
         this.players.push(new Player(this.add.sprite(p2.x, p2.y, 'player_blue'), 1, this));
-        // this.frameText = this.add.text(20, 20, 'Player Frame: ' + this.player.sprite.frame, { fontSize: '16px', fill: '#000' });
     };
     MainState.prototype.play = function () {
         this.start = true;
@@ -293,7 +360,6 @@ var MainState = (function (_super) {
     MainState.prototype.update = function () {
         this.players[0].update();
         this.players[1].update();
-        //this.frameText.text = 'Player Frame: ' + this.player.sprite.frame;
     };
     return MainState;
 })(Phaser.State);

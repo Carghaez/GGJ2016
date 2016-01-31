@@ -1,4 +1,90 @@
-﻿class ActorFlag {
+﻿/*
+for (y = 0; y < 10; y++) {
+    boxes.push([]);
+    for (x = 0; x < 10; x++) {
+        boxes[y].push(document.getElementById("box" + x + "_" + y));
+
+        boxes[y][x].left = document.getElementById("box" + (x - 1) + "_" + y);
+        boxes[y][x].right = document.getElementById("box" + (x + 1) + "_" + y);
+        boxes[y][x].top = document.getElementById("box" + x + "_" + (y - 1));
+        boxes[y][x].bottom = document.getElementById("box" + x + "_" + (y + 1));
+
+    }
+}
+
+var fase = "COLORE_INIZIALE";
+
+function azione(x, y) {
+    if (fase == "COLORE_INIZIALE")
+        return true;
+
+    if (fase == "CERCA_CONTORNO") {
+        // la casella su cui ci troviamo va prima colorata:
+        boxes[y][x].checked = true;
+        var i, contorno = cerca_contorno(x, y);
+        var r = [];
+        for (i = 0; i < contorno.length; i++)
+            r.push(contorno[i].id);
+        alert(r.join());
+        return false;
+    }
+
+    return false;
+}
+
+
+function cerca_contorno(orig_x, orig_y) {
+    for (y = 0; y < 10; y++)
+        for (x = 0; x < 10; x++)
+            boxes[y][x].visited = false;
+
+    var pila = [boxes[orig_y][orig_x]];
+    boxes[orig_y][orig_x].prev = null;
+
+    while (pila.length != 0) {
+        var curr = pila.pop();
+ 
+        // marca come visitato
+        curr.visited = true;
+
+        if (curr.prev != boxes[orig_y][orig_x] &&
+            (curr.left == boxes[orig_y][orig_x] ||
+                curr.right == boxes[orig_y][orig_x] ||
+                curr.top == boxes[orig_y][orig_x] ||
+                curr.bottom == boxes[orig_y][orig_x])) {
+            // ciclo trovato!
+            var ciclo = [curr];
+            while (ciclo[ciclo.length - 1].prev != null)
+                ciclo.push(ciclo[ciclo.length - 1].prev);
+            return ciclo;
+        }
+
+        if (curr.left && curr.left.checked && !curr.left.visited) {
+            curr.left.prev = curr;
+            pila.push(curr.left);
+        }
+
+        if (curr.right && curr.right.checked && !curr.right.visited) {
+            curr.right.prev = curr;
+            pila.push(curr.right);
+        }
+
+        if (curr.top && curr.top.checked && !curr.top.visited) {
+            curr.top.prev = curr;
+            pila.push(curr.top);
+        }
+
+        if (curr.bottom && curr.bottom.checked && !curr.bottom.visited) {
+            curr.bottom.prev = curr;
+            pila.push(curr.bottom);
+        }
+    }
+
+    return null;
+}
+*/
+
+class ActorFlag {
     // boilerplate
     constructor(public value: string) {
     }
@@ -62,6 +148,7 @@ class GridBoxes {
             }
         }
     }
+
     getNext(playerPos: Phaser.Point, dir: Phaser.Point, index: number): Phaser.Point {
         var r = Math.ceil((playerPos.y - this.initPlayers.y) / 52);
         var c = Math.ceil((playerPos.x - this.initPlayers.x) / 64);
@@ -181,8 +268,6 @@ class GameActor {
 class Player extends GameActor {
     keys: any;
     index: number;
-    // Debug info
-    lastInputTime: any;
 
     constructor(sprite: Phaser.Sprite, index:number, gameState: MainState) {
         super(sprite, gameState);
@@ -198,7 +283,7 @@ class Player extends GameActor {
 
         if (index == 0) {
             this.keys = this.gameState.input.keyboard.addKeys({
-                'E': Phaser.Keyboard.E, 'Q': Phaser.Keyboard.Q, 'SPACEBAR': Phaser.Keyboard.SPACEBAR,
+                'SPACEBAR': Phaser.Keyboard.SPACEBAR,
                 'W': Phaser.Keyboard.W, 'A': Phaser.Keyboard.A, 'S': Phaser.Keyboard.S, 'D': Phaser.Keyboard.D,
             });
         } else {
@@ -207,7 +292,6 @@ class Player extends GameActor {
             });
         }
    
-        this.lastInputTime = this.gameState.game.time.time;
         this.setState(ActorState.idle);
     }
 
@@ -230,23 +314,7 @@ class Player extends GameActor {
         return newDir;
     }
 
-    update(): void {
-        // Debug: Input check
-         /*if (this.gameState.game.time.time > this.lastInputTime + 100 && (this.keys.E.isDown || this.keys.Q.isDown)) {
-
-            if (this.state !== ActorState.debug) {
-                this.setState(ActorState.debug);
-                this.sprite.animations.stop(null, false);
-            }
-
-           if (this.keys.E.isDown)
-                this.sprite.frame = +this.sprite.frame + 1;
-            if (this.keys.Q.isDown)
-                this.sprite.frame = +this.sprite.frame - 1;
-            this.lastInputTime = this.gameState.game.time.time;
-
-        }*/
-        
+    update(): void {      
         // Debug: START GAME
         if (!this.gameState.start && (this.keys.SPACEBAR && this.keys.SPACEBAR.isDown)) {
             this.gameState.play();
@@ -268,7 +336,6 @@ class Player extends GameActor {
                 this.gameState.add.tween(this.sprite).to(p, 500, "Linear", true).onComplete.add(this.touchTile, this);
             }
         }
-       // this.playFrames();
     }
 
     touchTile(): void {
@@ -281,8 +348,6 @@ class MainState extends Phaser.State {
     players: GameActor[];
     start: boolean; 
     boxes: GridBoxes;
-    // Debug info
-    frameText: Phaser.Text;
 
 	constructor(public game: Phaser.Game) {
         super();
@@ -324,7 +389,6 @@ class MainState extends Phaser.State {
         var p2 = this.boxes.getCoords(15, 3);
         this.players.push(new Player(this.add.sprite(p2.x, p2.y, 'player_blue'), 1, this));
 
-       // this.frameText = this.add.text(20, 20, 'Player Frame: ' + this.player.sprite.frame, { fontSize: '16px', fill: '#000' });
     }
 
     play(): void {
@@ -343,6 +407,5 @@ class MainState extends Phaser.State {
     update(): void {
         this.players[0].update();
         this.players[1].update();
-        //this.frameText.text = 'Player Frame: ' + this.player.sprite.frame;
     }
 }		
