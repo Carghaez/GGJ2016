@@ -1,0 +1,6 @@
+D:\Devs\VS15\Projects\GGJ2016\GGJ2016\bin\GGJ2016.dll.config
+D:\Devs\VS15\Projects\GGJ2016\GGJ2016\bin\GGJ2016.dll
+D:\Devs\VS15\Projects\GGJ2016\GGJ2016\bin\GGJ2016.pdb
+D:\Devs\VS15\Projects\GGJ2016\GGJ2016\obj\Debug\GGJ2016.csprojResolveAssemblyReference.cache
+D:\Devs\VS15\Projects\GGJ2016\GGJ2016\obj\Debug\GGJ2016.dll
+D:\Devs\VS15\Projects\GGJ2016\GGJ2016\obj\Debug\GGJ2016.pdb
