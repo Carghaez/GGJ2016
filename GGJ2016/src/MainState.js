@@ -45,7 +45,7 @@ var GameActor = (function () {
     function GameActor(sprite, gameState) {
         this.sprite = sprite;
         this.gameState = gameState;
-        this.speed = 0; // va da 0 a maxSpeed
+        this.speed = 100; // va da 0 a maxSpeed
         this.maxSpeed = 100;
         this.fireType = 0;
         this.walkDir = new Phaser.Point(0, 0);
@@ -120,14 +120,31 @@ var Player = (function (_super) {
         _super.call(this, sprite, gameState);
         this.gameState.physics.arcade.enable(this.sprite);
         this.sprite.animations.add('idleDef', [0, 1, 2, 3], 4, true);
-        //this.sprite.animations.add('idleDef', [4, 5, 6, 7, 8, 9, 10, 11, 22, 13], 6, true);
+        this.sprite.animations.add('walkRight', [10, 11, 12, 13, 14, 15, 16, 17, 18, 19], 6, true);
         this.keys = this.gameState.input.keyboard.addKeys({
-            'E': Phaser.Keyboard.E, 'Q': Phaser.Keyboard.Q,
+            'E': Phaser.Keyboard.E, 'Q': Phaser.Keyboard.Q, 'SPACEBAR': Phaser.Keyboard.SPACEBAR,
             'W': Phaser.Keyboard.W, 'A': Phaser.Keyboard.A, 'S': Phaser.Keyboard.S, 'D': Phaser.Keyboard.D,
             'left': Phaser.Keyboard.LEFT, 'right': Phaser.Keyboard.RIGHT, 'up': Phaser.Keyboard.UP, 'down': Phaser.Keyboard.DOWN
         });
         this.lastInputTime = this.gameState.game.time.time;
     }
+    Player.prototype.getDirection = function () {
+        // Check nuova direzione 
+        var newDir = new Phaser.Point();
+        if (this.keys.W.isDown) {
+            newDir.y = -1;
+        }
+        else if (this.keys.S.isDown) {
+            newDir.y = +1;
+        }
+        if (this.keys.A.isDown) {
+            newDir.x = -1;
+        }
+        else if (this.keys.D.isDown) {
+            newDir.x = +1;
+        }
+        return newDir;
+    };
     Player.prototype.update = function () {
         // Debug: Input check
         if (this.gameState.game.time.time > this.lastInputTime + 100 && (this.keys.E.isDown || this.keys.Q.isDown)) {
@@ -141,33 +158,27 @@ var Player = (function (_super) {
                 this.sprite.frame = +this.sprite.frame - 1;
             this.lastInputTime = this.gameState.game.time.time;
         }
+        // Debug: START GAME
+        if (!this.gameState.start && this.keys.SPACEBAR.isDown) {
+            this.gameState.play();
+        }
         // Controllo se il personaggio è ancora vivo
         if (this.state !== ActorState.die && this.state !== ActorState.debug) {
-            // Check nuova direzione 
-            var newDir = new Phaser.Point();
-            if (this.keys.W.isDown) {
-                newDir.y = -1;
-            }
-            else if (this.keys.S.isDown) {
-                newDir.y = +1;
-            }
-            if (this.keys.A.isDown) {
-                newDir.x = -1;
-            }
-            else if (this.keys.D.isDown) {
-                newDir.x = +1;
-            }
+            // Controllo se è stata premuta una direzione
+            var newDir = this.getDirection();
             // Se ha scelto una nuova direzione la cambio
             if (newDir.x !== 0 || newDir.y !== 0) {
                 this.setNewDir(newDir);
             }
+            // La nuova direzione dev'essere presa solo quando è in IDLE (cioè ha raggiunto una tile)
             if (this.state === ActorState.idle) {
-                this.setState(ActorState.walk);
                 this.setWalkDir(this.newDir);
+                this.setState(ActorState.walk);
             }
             else {
             }
-            this.walk();
+            if (this.state === ActorState.walk)
+                this.walk();
         }
     };
     return Player;
@@ -177,6 +188,7 @@ var MainState = (function (_super) {
     function MainState(game) {
         _super.call(this);
         this.game = game;
+        this.start = false;
     }
     MainState.prototype.gameResized = function () { };
     MainState.prototype.init = function () {
@@ -205,6 +217,9 @@ var MainState = (function (_super) {
         this.add.sprite(0, 0, 'background');
         this.player = new Player(this.add.sprite(150, 250, 'player'), this);
         this.frameText = this.add.text(20, 20, 'Player Frame: ' + this.player.sprite.frame, { fontSize: '16px', fill: '#000' });
+    };
+    MainState.prototype.play = function () {
+        this.player.setNewDir(new Phaser.Point(1, 0));
     };
     MainState.prototype.update = function () {
         this.player.update();

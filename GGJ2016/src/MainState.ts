@@ -48,7 +48,7 @@ class GameActor {
     health: number;
     walkDir: Phaser.Point; // X e Y Valori: -1, 0, +1
     newDir: Phaser.Point; // X e Y Valori: -1, 0, +1
-    speed: number = 0; // va da 0 a maxSpeed
+    speed: number = 100; // va da 0 a maxSpeed
     maxSpeed: number = 100;
     fireType: number = 0;
     fireDir: Phaser.Point; // X e Y valori compresi tra -1 e +1
@@ -142,15 +142,34 @@ class Player extends GameActor {
         this.gameState.physics.arcade.enable(this.sprite);
   
         this.sprite.animations.add('idleDef', [0, 1, 2, 3], 4, true);
-        //this.sprite.animations.add('idleDef', [4, 5, 6, 7, 8, 9, 10, 11, 22, 13], 6, true);
+        this.sprite.animations.add('walkRight', [10, 11, 12, 13, 14, 15, 16, 17, 18, 19], 6, true);
 
         this.keys = this.gameState.input.keyboard.addKeys({
-            'E': Phaser.Keyboard.E, 'Q': Phaser.Keyboard.Q,
+            'E': Phaser.Keyboard.E, 'Q': Phaser.Keyboard.Q, 'SPACEBAR': Phaser.Keyboard.SPACEBAR,
             'W': Phaser.Keyboard.W, 'A': Phaser.Keyboard.A, 'S': Phaser.Keyboard.S, 'D': Phaser.Keyboard.D,
             'left': Phaser.Keyboard.LEFT, 'right': Phaser.Keyboard.RIGHT, 'up': Phaser.Keyboard.UP, 'down': Phaser.Keyboard.DOWN
         });
         this.lastInputTime = this.gameState.game.time.time;
     }
+
+    getDirection(): Phaser.Point {
+        // Check nuova direzione 
+        var newDir = new Phaser.Point();
+        if (this.keys.W.isDown) {
+            newDir.y = -1;
+        }
+        else if (this.keys.S.isDown) {
+            newDir.y = +1;
+        }
+        if (this.keys.A.isDown) {
+            newDir.x = -1;
+        }
+        else if (this.keys.D.isDown) {
+            newDir.x = +1;
+        }
+        return newDir;
+    }
+
 
     update(): void {
         // Debug: Input check
@@ -168,34 +187,31 @@ class Player extends GameActor {
             this.lastInputTime = this.gameState.game.time.time;
         }
   
+        // Debug: START GAME
+        if (!this.gameState.start && this.keys.SPACEBAR.isDown) {
+            this.gameState.play();
+        }
+    
         // Controllo se il personaggio è ancora vivo
         if (this.state !== ActorState.die && this.state !== ActorState.debug) {
-            // Check nuova direzione 
-            var newDir = new Phaser.Point();
-            if (this.keys.W.isDown) {
-                newDir.y = -1;
-            }
-            else if (this.keys.S.isDown) {
-                newDir.y = +1;
-            }
-            if (this.keys.A.isDown) {
-                newDir.x = -1;
-            }
-            else if (this.keys.D.isDown) {
-                newDir.x = +1;
-            }
+
+            // Controllo se è stata premuta una direzione
+            var newDir = this.getDirection();
             // Se ha scelto una nuova direzione la cambio
             if (newDir.x !== 0 || newDir.y !== 0) {
                 this.setNewDir(newDir);
             }
 
+            // La nuova direzione dev'essere presa solo quando è in IDLE (cioè ha raggiunto una tile)
             if (this.state === ActorState.idle) {
-                this.setState(ActorState.walk);
                 this.setWalkDir(this.newDir);
+                this.setState(ActorState.walk);
             } else {
                 // dobbiamo metterlo in idle appena tocca la nuova tile
             }
-            this.walk();
+
+            if (this.state === ActorState.walk)
+                this.walk();
         }
     }
 }
@@ -203,11 +219,13 @@ class Player extends GameActor {
 class MainState extends Phaser.State {
     tiles: Phaser.Group;
     player: GameActor;
+    start: boolean; 
     // Debug info
     frameText: Phaser.Text;
 
 	constructor(public game: Phaser.Game) {
-		super();
+        super();
+        this.start = false;
     }
 
 	gameResized(): void { }
@@ -240,9 +258,11 @@ class MainState extends Phaser.State {
 
         this.player = new Player(this.add.sprite(150, 250, 'player'), this);
         this.frameText = this.add.text(20, 20, 'Player Frame: ' + this.player.sprite.frame, { fontSize: '16px', fill: '#000' });
-
     }
 
+    play(): void {
+        this.player.setNewDir(new Phaser.Point(1, 0));
+    }
 
     update(): void {   
         this.player.update();
