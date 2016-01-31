@@ -52,17 +52,6 @@ var GridBoxes = (function () {
             }
         }
     }
-    /*touch(playerPos: Phaser.Point, index: number): Phaser.Point {
-        var r = Math.ceil((playerPos.x - this.initPlayers[index].x) / 64);
-        var c = Math.ceil((playerPos.y - this.initPlayers[index].y) / 52);
-        let bp = this.boxes[r][c].pos;
-        let pp = playerPos;
-        if ((bp.x > playerPos.x - 5 && bp.x < playerPos.x + 5) && (bp.y > playerPos.y - 5 && bp.y < playerPos.y + 5)) {
-            this.boxes[r][c].changeActor(ActorFlag.red);
-            return bp;
-        }
-        return null;
-    }*/
     GridBoxes.prototype.getNext = function (playerPos, dir, index) {
         var r = Math.ceil((playerPos.y - this.initPlayers[index].y) / 52);
         var c = Math.ceil((playerPos.x - this.initPlayers[index].x) / 64);
@@ -104,8 +93,6 @@ var GameActor = (function () {
     function GameActor(sprite, gameState) {
         this.sprite = sprite;
         this.gameState = gameState;
-        this.speed = 100; // va da 0 a maxSpeed
-        this.maxSpeed = 100;
         this.fireType = 0;
         this.walkDir = new Phaser.Point(0, 0);
         this.newDir = new Phaser.Point(0, 0);
@@ -157,24 +144,6 @@ var GameActor = (function () {
     GameActor.prototype.setNewDir = function (newDir) {
         this.newDir = newDir;
     };
-    /*setSpeed(speed: number):void {
-        if (speed >= 0 && speed <= this.maxSpeed) {
-            this.speed = speed;
-        }
-    }
-
-    footstep():void {
-        if (this.state === ActorState.walk) {
-            this.sprite.body.velocity.x = this.walkDir.x * this.speed;
-            this.sprite.body.velocity.y = this.walkDir.y * this.speed;
-        } else {
-            this.sprite.body.velocity.x = this.sprite.body.velocity.y = 0;
-        }
-    }*/
-    /*walk(): void {
-        //this.footstep();
-        this.playFrames();
-    }*/
     GameActor.prototype.update = function () {
     };
     return GameActor;
@@ -214,18 +183,6 @@ var Player = (function (_super) {
             }
         return newDir;
     };
-    /*touchTiles(): boolean {
-        let pos: Phaser.Point;
-        pos = this.gameState.boxes.touch(new Phaser.Point(this.sprite.x, this.sprite.y), 0);
-        console.log(pos);
-        console.log("x:" + this.sprite.x+", y:"+this.sprite.y);
-        if (pos) {
-            this.sprite.x = pos.x;
-            this.sprite.y = pos.y;
-            return true;
-        }
-        return false;
-    }*/
     Player.prototype.update = function () {
         // Debug: Input check
         if (this.gameState.game.time.time > this.lastInputTime + 100 && (this.keys.E.isDown || this.keys.Q.isDown)) {
@@ -239,10 +196,10 @@ var Player = (function (_super) {
             if (this.keys.Q.isDown)
                 this.sprite.frame = +this.sprite.frame - 1;
             this.lastInputTime = this.gameState.game.time.time;
-        }
-        // Debug: START GAME
-        if (!this.gameState.start && this.keys.SPACEBAR.isDown) {
-            this.gameState.play();
+            // Debug: START GAME
+            if (!this.gameState.start && this.keys.SPACEBAR.isDown) {
+                this.gameState.play();
+            }
         }
         // Controllo se il personaggio è ancora vivo
         if (this.state !== ActorState.die && this.state !== ActorState.debug) {
@@ -296,7 +253,6 @@ var MainState = (function (_super) {
         this.load.spritesheet('tile_blank', 'assets/tile_blank.png', 64, 64);
     };
     MainState.prototype.create = function () {
-        //this.game.stage.backgroundColor = '#509F00';
         this.add.sprite(0, 0, 'background');
         this.boxes = new GridBoxes(new Phaser.Point(16, 7), this);
         this.player = new Player(this.add.sprite(163, 258, 'player'), this);

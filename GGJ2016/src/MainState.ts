@@ -58,19 +58,6 @@ class GridBoxes {
             }
         }
     }
-
-    /*touch(playerPos: Phaser.Point, index: number): Phaser.Point {
-        var r = Math.ceil((playerPos.x - this.initPlayers[index].x) / 64);
-        var c = Math.ceil((playerPos.y - this.initPlayers[index].y) / 52);
-        let bp = this.boxes[r][c].pos;
-        let pp = playerPos;
-        if ((bp.x > playerPos.x - 5 && bp.x < playerPos.x + 5) && (bp.y > playerPos.y - 5 && bp.y < playerPos.y + 5)) {
-            this.boxes[r][c].changeActor(ActorFlag.red);
-            return bp;
-        }
-        return null;
-    }*/
-
     getNext(playerPos: Phaser.Point, dir: Phaser.Point, index: number): Phaser.Point {
         var r = Math.ceil((playerPos.y - this.initPlayers[index].y) / 52);
         var c = Math.ceil((playerPos.x - this.initPlayers[index].x) / 64);
@@ -115,12 +102,9 @@ class ActorState {
 // Sample usage: var first: ActorState = ActorState.idle;
 
 class GameActor {
-    // grazie a public/private/protected
     health: number;
-    walkDir: Phaser.Point; // X e Y Valori: -1, 0, +1
-    newDir: Phaser.Point; // X e Y Valori: -1, 0, +1
-    speed: number = 100; // va da 0 a maxSpeed
-    maxSpeed: number = 100;
+    walkDir: Phaser.Point; 
+    newDir: Phaser.Point; 
     fireType: number = 0;
     fireDir: Phaser.Point; // X e Y valori compresi tra -1 e +1
     state: ActorState;
@@ -183,26 +167,6 @@ class GameActor {
         this.newDir = newDir;
     }
 
-    /*setSpeed(speed: number):void {
-        if (speed >= 0 && speed <= this.maxSpeed) {
-            this.speed = speed;
-        }
-    }
-
-    footstep():void {
-        if (this.state === ActorState.walk) {
-            this.sprite.body.velocity.x = this.walkDir.x * this.speed;
-            this.sprite.body.velocity.y = this.walkDir.y * this.speed;
-        } else {
-            this.sprite.body.velocity.x = this.sprite.body.velocity.y = 0;
-        }
-    }*/
-
-    /*walk(): void {
-        //this.footstep();
-        this.playFrames();
-    }*/
-
     update(): void {
 
     }
@@ -251,19 +215,6 @@ class Player extends GameActor {
         return newDir;
     }
 
-    /*touchTiles(): boolean {
-        let pos: Phaser.Point;
-        pos = this.gameState.boxes.touch(new Phaser.Point(this.sprite.x, this.sprite.y), 0);
-        console.log(pos);
-        console.log("x:" + this.sprite.x+", y:"+this.sprite.y);
-        if (pos) {
-            this.sprite.x = pos.x;
-            this.sprite.y = pos.y;
-            return true;
-        }
-        return false;
-    }*/
-
     update(): void {
         // Debug: Input check
         if (this.gameState.game.time.time > this.lastInputTime + 100 && (this.keys.E.isDown || this.keys.Q.isDown)) {
@@ -278,14 +229,13 @@ class Player extends GameActor {
             if (this.keys.Q.isDown)
                 this.sprite.frame = +this.sprite.frame - 1;
             this.lastInputTime = this.gameState.game.time.time;
+
+            // Debug: START GAME
+            if (!this.gameState.start && this.keys.SPACEBAR.isDown) {
+                this.gameState.play();
+            }
         }
   
-        // Debug: START GAME
-        if (!this.gameState.start && this.keys.SPACEBAR.isDown) {
-            this.gameState.play();
-        }
-
-
         // Controllo se il personaggio è ancora vivo
         if (this.state !== ActorState.die && this.state !== ActorState.debug) {
             // Controllo se è stata premuta una direzione
@@ -348,7 +298,6 @@ class MainState extends Phaser.State {
 	}
 
 	create(): void {
-        //this.game.stage.backgroundColor = '#509F00';
         this.add.sprite(0, 0, 'background');
 
         this.boxes = new GridBoxes(new Phaser.Point(16, 7), this);
