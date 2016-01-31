@@ -1,88 +1,4 @@
-﻿/*
-for (y = 0; y < 10; y++) {
-    boxes.push([]);
-    for (x = 0; x < 10; x++) {
-        boxes[y].push(document.getElementById("box" + x + "_" + y));
-
-        boxes[y][x].left = document.getElementById("box" + (x - 1) + "_" + y);
-        boxes[y][x].right = document.getElementById("box" + (x + 1) + "_" + y);
-        boxes[y][x].top = document.getElementById("box" + x + "_" + (y - 1));
-        boxes[y][x].bottom = document.getElementById("box" + x + "_" + (y + 1));
-
-    }
-}
-
-var fase = "COLORE_INIZIALE";
-
-function azione(x, y) {
-    if (fase == "COLORE_INIZIALE")
-        return true;
-
-    if (fase == "CERCA_CONTORNO") {
-        // la casella su cui ci troviamo va prima colorata:
-        boxes[y][x].checked = true;
-        var i, contorno = cerca_contorno(x, y);
-        var r = [];
-        for (i = 0; i < contorno.length; i++)
-            r.push(contorno[i].id);
-        alert(r.join());
-        return false;
-    }
-
-    return false;
-}
-
-
-function cerca_contorno(orig_x, orig_y) {
-    for (y = 0; y < 10; y++)
-        for (x = 0; x < 10; x++)
-            boxes[y][x].visited = false;
-
-    var pila = [boxes[orig_y][orig_x]];
-    boxes[orig_y][orig_x].prev = null;
-
-    while (pila.length != 0) {
-        var curr = pila.pop();
- 
-        // marca come visitato
-        curr.visited = true;
-
-        if (curr.prev != boxes[orig_y][orig_x] &&
-            (curr.left == boxes[orig_y][orig_x] ||
-                curr.right == boxes[orig_y][orig_x] ||
-                curr.top == boxes[orig_y][orig_x] ||
-                curr.bottom == boxes[orig_y][orig_x])) {
-            // ciclo trovato!
-            var ciclo = [curr];
-            while (ciclo[ciclo.length - 1].prev != null)
-                ciclo.push(ciclo[ciclo.length - 1].prev);
-            return ciclo;
-        }
-
-        if (curr.left && curr.left.checked && !curr.left.visited) {
-            curr.left.prev = curr;
-            pila.push(curr.left);
-        }
-
-        if (curr.right && curr.right.checked && !curr.right.visited) {
-            curr.right.prev = curr;
-            pila.push(curr.right);
-        }
-
-        if (curr.top && curr.top.checked && !curr.top.visited) {
-            curr.top.prev = curr;
-            pila.push(curr.top);
-        }
-
-        if (curr.bottom && curr.bottom.checked && !curr.bottom.visited) {
-            curr.bottom.prev = curr;
-            pila.push(curr.bottom);
-        }
-    }
-
-    return null;
-}
-*/
+﻿
 
 class ActorFlag {
     // boilerplate
@@ -105,6 +21,12 @@ class Box {
     spriteBlank: Phaser.Sprite;
     spriteRed: Phaser.Sprite;
     spriteBlue: Phaser.Sprite;
+    top: Box;
+    right: Box;
+    left: Box;
+    bottom: Box;
+    visited: boolean;
+    prev: Box;
 
     constructor(pos: Phaser.Point, protected gameState: MainState) {
         this.gameState = gameState;
@@ -123,10 +45,15 @@ class Box {
             this.spriteRed.alpha = 1;
             this.spriteBlue.alpha = 0;
         }
-        if (index == 1) {
+        else if (index == 1) {
             this.flag = ActorFlag.blue;
             this.spriteRed.alpha = 0;
             this.spriteBlue.alpha = 1;
+        }
+        else {
+            this.flag = ActorFlag.blank;
+            this.spriteRed.alpha = 0;
+            this.spriteBlue.alpha = 0;
         }
     }
 }
@@ -147,13 +74,96 @@ class GridBoxes {
                 this.boxes[i].push(new Box(new Phaser.Point(this.initTiles.x + (i * 64), this.initTiles.y + (j * (64 - 12))), gameState));
             }
         }
+
+        for (let i = 0; i < size.x; ++i) {
+            for (let j = 0; j < size.y; ++j) {
+                if (this.boxes[i-1]!==undefined)
+                    this.boxes[i][j].left = this.boxes[i - 1][j];
+                if (this.boxes[i + 1] !== undefined)
+                    this.boxes[i][j].right = this.boxes[i + 1][j];
+                if (this.boxes[i][j-1] !== undefined)
+                    this.boxes[i][j].top = this.boxes[i][j - 1];
+                if (this.boxes[i][j+1] !== undefined)
+                    this.boxes[i][j].bottom = this.boxes[i][j+1];
+            }
+        }
+
+
     }
 
     getNext(playerPos: Phaser.Point, dir: Phaser.Point, index: number): Phaser.Point {
         var r = Math.ceil((playerPos.y - this.initPlayers.y) / 52);
         var c = Math.ceil((playerPos.x - this.initPlayers.x) / 64);
+        var flagPlayer;
+        if (index == 0) {
+            flagPlayer = ActorFlag.red;
+        }
+        else {
+            flagPlayer = ActorFlag.blue;
+        }
 
-        this.boxes[c][r].changeActor(index);
+        if (this.boxes[c][r].flag != flagPlayer) {
+            this.boxes[c][r].changeActor(index);
+
+
+
+            for (let y = 0; y < this.boxes.length; y++)
+                for (let x = 0; x < this.boxes[y].length; x++)
+                    this.boxes[y][x].visited = false;
+
+            var pila = [this.boxes[c][r]];
+            this.boxes[c][r].prev = null;
+
+
+
+            while (pila.length != 0) {
+                var curr = pila.pop();
+ 
+                // marca come visitato
+                curr.visited = true;
+
+                if (curr.prev != this.boxes[c][r] &&
+                    (curr.left == this.boxes[c][r] ||
+                        curr.right == this.boxes[c][r] ||
+                        curr.top == this.boxes[c][r] ||
+                        curr.bottom == this.boxes[c][r])) {
+                    // ciclo trovato!
+                    var ciclo = [curr];
+                    while (ciclo[ciclo.length - 1].prev != null)
+                        ciclo.push(ciclo[ciclo.length - 1].prev);
+
+                    if (ciclo.length>7) {
+                        for (let i = 0; i < ciclo.length; i++) {
+                            ciclo[i].changeActor(2);
+                        }
+                        console.log("TROVATO");
+                    }
+                    break;
+                }
+
+                if (curr.left && curr.left.flag === flagPlayer && !curr.left.visited) {
+                    curr.left.prev = curr;
+                    pila.push(curr.left);
+                }
+
+                if (curr.right && curr.right.flag === flagPlayer && !curr.right.visited) {
+                    curr.right.prev = curr;
+                    pila.push(curr.right);
+                }
+
+                if (curr.top && curr.top.flag === flagPlayer && !curr.top.visited) {
+                    curr.top.prev = curr;
+                    pila.push(curr.top);
+                }
+
+                if (curr.bottom && curr.bottom.flag === flagPlayer && !curr.bottom.visited) {
+                    curr.bottom.prev = curr;
+                    pila.push(curr.bottom);
+                }
+            }
+        }
+
+
 
         r += dir.y;
         c += dir.x;
@@ -333,7 +343,7 @@ class Player extends GameActor {
                 this.setWalkDir(this.newDir);
                 this.setState(ActorState.walk);
                 let p = this.gameState.boxes.getNext(new Phaser.Point(this.sprite.x, this.sprite.y), this.walkDir, this.index);
-                this.gameState.add.tween(this.sprite).to(p, 500, "Linear", true).onComplete.add(this.touchTile, this);
+                this.gameState.add.tween(this.sprite).to(p, 300, "Linear", true).onComplete.add(this.touchTile, this);
             }
         }
     }
