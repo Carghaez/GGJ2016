@@ -1,6 +1,4 @@
-﻿
-
-class ActorFlag {
+﻿class ActorFlag {
     // boilerplate
     constructor(public value: string) {
     }
@@ -105,16 +103,12 @@ class GridBoxes {
         if (this.boxes[c][r].flag != flagPlayer) {
             this.boxes[c][r].changeActor(index);
 
-
-
             for (let y = 0; y < this.boxes.length; y++)
                 for (let x = 0; x < this.boxes[y].length; x++)
                     this.boxes[y][x].visited = false;
 
             var pila = [this.boxes[c][r]];
             this.boxes[c][r].prev = null;
-
-
 
             while (pila.length != 0) {
                 var curr = pila.pop();
@@ -162,9 +156,7 @@ class GridBoxes {
                 }
             }
         }
-
-
-
+        
         r += dir.y;
         c += dir.x;
 
@@ -207,9 +199,9 @@ class ActorState {
 class GameActor {
     health: number;
     walkDir: Phaser.Point; 
-    newDir: Phaser.Point; 
+    newDir: Phaser.Point;
     fireType: number = 0;
-    fireDir: Phaser.Point; // X e Y valori compresi tra -1 e +1
+    fireDir: Phaser.Point;
     state: ActorState;
     pos: Phaser.Point;
     keys: any;
