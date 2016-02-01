@@ -21,7 +21,7 @@ var TitoloGioco;
         __extends(Game, _super);
         function Game() {
             var screenDims = Utils.ScreenUtils.calculateScreenMetrics(1280, 720, Utils.Orientation.LANDSCAPE);
-            _super.call(this, screenDims.gameWidth, screenDims.gameHeight, Phaser.AUTO, 'id_game', null /* , transparent, antialias, physicsConfig */);
+            _super.call(this, screenDims.gameWidth, screenDims.gameHeight, Phaser.AUTO, 'id_game', null, false, false /* , transparent, antialias, physicsConfig */);
             // states
             this.state.add('Gameloop', MainState);
             // start
@@ -39,6 +39,7 @@ var TitoloGioco;
         MainState.prototype.init = function () {
             this.input.maxPointers = 1;
             this.stage.disableVisibilityChange = false;
+            this.stage.backgroundColor = "#220F29";
             var screenDims = Utils.ScreenUtils.screenMetrics;
             if (this.game.device.desktop) {
                 console.log("DESKTOP");
@@ -88,6 +89,8 @@ var TitoloGioco;
             this.players.push(new GameObjects.Player(this.add.sprite(p1.x, p1.y, 'player_red'), 0, this));
             var p2 = this.boxes.getCoords(15, 3);
             this.players.push(new GameObjects.Player(this.add.sprite(p2.x, p2.y, 'player_blue'), 1, this));
+            this.game.time.advancedTiming = true;
+            this.fpstext = this.add.text(0, 0, "FPS:", { fill: '#fff' });
         };
         MainState.prototype.play = function () {
             TitoloGioco.Globals.start = true;
@@ -102,6 +105,7 @@ var TitoloGioco;
             }
         };
         MainState.prototype.update = function () {
+            this.fpstext.setText("FPS:" + this.game.time.fps);
             this.players[0].update();
             this.players[1].update();
         };

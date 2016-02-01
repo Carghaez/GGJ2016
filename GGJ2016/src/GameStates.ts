@@ -14,8 +14,7 @@
         constructor() {
             var screenDims = Utils.ScreenUtils.calculateScreenMetrics(1280, 720, Utils.Orientation.LANDSCAPE);
 
-            super(screenDims.gameWidth, screenDims.gameHeight, Phaser.AUTO, 'id_game',
-                null /* , transparent, antialias, physicsConfig */);
+            super(screenDims.gameWidth, screenDims.gameHeight, Phaser.AUTO, 'id_game', null,false,false /* , transparent, antialias, physicsConfig */);
             
             // states
             this.state.add('Gameloop', MainState);
@@ -29,15 +28,18 @@
         tiles: Phaser.Group;
         players: GameObjects.Player[];
         boxes: GameObjects.GridBoxes;
+        fpstext: Phaser.Text;
 
         constructor(public game: Phaser.Game) {
+            
             super();
+            
         }
 
         init(): void {
             this.input.maxPointers = 1;
             this.stage.disableVisibilityChange = false;
-
+            this.stage.backgroundColor = "#220F29";
             var screenDims = Utils.ScreenUtils.screenMetrics;
 
             if (this.game.device.desktop) {
@@ -55,7 +57,7 @@
                 this.scale.pageAlignVertically = true;
                 this.scale.forceOrientation(true, false);
             }
-
+            
             console.log(screenDims);
 
             //this.game.renderer.renderSession.roundPixels = true
@@ -96,7 +98,9 @@
             this.players.push(new GameObjects.Player(this.add.sprite(p1.x, p1.y, 'player_red'), 0, this));
             var p2 = this.boxes.getCoords(15, 3);
             this.players.push(new GameObjects.Player(this.add.sprite(p2.x, p2.y, 'player_blue'), 1, this));
-
+            this.game.time.advancedTiming = true;
+            this.fpstext = this.add.text(0, 0, "FPS:", { fill: '#fff' });
+            
         }
 
         play(): void {
@@ -113,6 +117,7 @@
         }
 
         update(): void {
+            this.fpstext.setText("FPS:" + this.game.time.fps);
             this.players[0].update();
             this.players[1].update();
         }
