@@ -34,12 +34,6 @@
             super();
         }
 
-        gameResized(): void {
-            console.log("ciao");
-            var screenDims = Utils.ScreenUtils.screenMetrics;
-            this.scale.setUserScale(screenDims.scaleX, screenDims.scaleY);
-        }
-
         init(): void {
             this.input.maxPointers = 1;
             this.stage.disableVisibilityChange = false;
@@ -48,11 +42,10 @@
 
             if (this.game.device.desktop) {
                 console.log("DESKTOP");
-                this.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
+                this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
                 this.scale.setUserScale(screenDims.scaleX, screenDims.scaleY);
                 this.scale.pageAlignHorizontally = true;
                 this.scale.pageAlignVertically = true;
-                this.scale.setResizeCallback(this.gameResized, this);
             }
             else {
                 console.log("MOBILE");

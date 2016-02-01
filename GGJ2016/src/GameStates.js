@@ -36,22 +36,16 @@ var TitoloGioco;
             _super.call(this);
             this.game = game;
         }
-        MainState.prototype.gameResized = function () {
-            console.log("ciao");
-            var screenDims = Utils.ScreenUtils.screenMetrics;
-            this.scale.setUserScale(screenDims.scaleX, screenDims.scaleY);
-        };
         MainState.prototype.init = function () {
             this.input.maxPointers = 1;
             this.stage.disableVisibilityChange = false;
             var screenDims = Utils.ScreenUtils.screenMetrics;
             if (this.game.device.desktop) {
                 console.log("DESKTOP");
-                this.scale.scaleMode = Phaser.ScaleManager.USER_SCALE;
+                this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
                 this.scale.setUserScale(screenDims.scaleX, screenDims.scaleY);
                 this.scale.pageAlignHorizontally = true;
                 this.scale.pageAlignVertically = true;
-                this.scale.setResizeCallback(this.gameResized, this);
             }
             else {
                 console.log("MOBILE");
