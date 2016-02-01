@@ -75,30 +75,20 @@ class GridBoxes {
 
         for (let i = 0; i < size.x; ++i) {
             for (let j = 0; j < size.y; ++j) {
-                if (this.boxes[i-1]!==undefined)
+                if (this.boxes[i - 1] !== undefined)
                     this.boxes[i][j].left = this.boxes[i - 1][j];
                 if (this.boxes[i + 1] !== undefined)
                     this.boxes[i][j].right = this.boxes[i + 1][j];
-                if (this.boxes[i][j-1] !== undefined)
+                if (this.boxes[i][j - 1] !== undefined)
                     this.boxes[i][j].top = this.boxes[i][j - 1];
-                if (this.boxes[i][j+1] !== undefined)
-                    this.boxes[i][j].bottom = this.boxes[i][j+1];
+                if (this.boxes[i][j + 1] !== undefined)
+                    this.boxes[i][j].bottom = this.boxes[i][j + 1];
             }
         }
-
-
     }
 
-    getNext(playerPos: Phaser.Point, dir: Phaser.Point, index: number): Phaser.Point {
-        var r = Math.ceil((playerPos.y - this.initPlayers.y) / 52);
-        var c = Math.ceil((playerPos.x - this.initPlayers.x) / 64);
-        var flagPlayer;
-        if (index == 0) {
-            flagPlayer = ActorFlag.red;
-        }
-        else {
-            flagPlayer = ActorFlag.blue;
-        }
+    checkClosedPath(r, c, index): void {
+        var flagPlayer = (index == 0) ? ActorFlag.red : ActorFlag.blue;
 
         if (this.boxes[c][r].flag != flagPlayer) {
             this.boxes[c][r].changeActor(index);
@@ -126,8 +116,8 @@ class GridBoxes {
                     while (ciclo[ciclo.length - 1].prev != null)
                         ciclo.push(ciclo[ciclo.length - 1].prev);
 
-                    if (ciclo.length>7) {
-                        for (let i = 0; i < ciclo.length; i++) {
+                    if (ciclo.length > 7) {
+                        for (let i = 0; i < ciclo.length; ++i) {
                             ciclo[i].changeActor(2);
                         }
                         console.log("TROVATO");
@@ -156,7 +146,14 @@ class GridBoxes {
                 }
             }
         }
-        
+    }
+
+    getNext(playerPos: Phaser.Point, dir: Phaser.Point, index: number): Phaser.Point {
+        var r = Math.ceil((playerPos.y - this.initPlayers.y) / 52);
+        var c = Math.ceil((playerPos.x - this.initPlayers.x) / 64);
+       
+        this.checkClosedPath(r, c, index);
+
         r += dir.y;
         c += dir.x;
 

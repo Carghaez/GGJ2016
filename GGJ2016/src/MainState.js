@@ -73,16 +73,8 @@ var GridBoxes = (function () {
             }
         }
     }
-    GridBoxes.prototype.getNext = function (playerPos, dir, index) {
-        var r = Math.ceil((playerPos.y - this.initPlayers.y) / 52);
-        var c = Math.ceil((playerPos.x - this.initPlayers.x) / 64);
-        var flagPlayer;
-        if (index == 0) {
-            flagPlayer = ActorFlag.red;
-        }
-        else {
-            flagPlayer = ActorFlag.blue;
-        }
+    GridBoxes.prototype.checkClosedPath = function (r, c, index) {
+        var flagPlayer = (index == 0) ? ActorFlag.red : ActorFlag.blue;
         if (this.boxes[c][r].flag != flagPlayer) {
             this.boxes[c][r].changeActor(index);
             for (var y = 0; y < this.boxes.length; y++)
@@ -104,7 +96,7 @@ var GridBoxes = (function () {
                     while (ciclo[ciclo.length - 1].prev != null)
                         ciclo.push(ciclo[ciclo.length - 1].prev);
                     if (ciclo.length > 7) {
-                        for (var i = 0; i < ciclo.length; i++) {
+                        for (var i = 0; i < ciclo.length; ++i) {
                             ciclo[i].changeActor(2);
                         }
                         console.log("TROVATO");
@@ -129,6 +121,11 @@ var GridBoxes = (function () {
                 }
             }
         }
+    };
+    GridBoxes.prototype.getNext = function (playerPos, dir, index) {
+        var r = Math.ceil((playerPos.y - this.initPlayers.y) / 52);
+        var c = Math.ceil((playerPos.x - this.initPlayers.x) / 64);
+        this.checkClosedPath(r, c, index);
         r += dir.y;
         c += dir.x;
         if (r < 0)
